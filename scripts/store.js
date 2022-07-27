@@ -1,9 +1,9 @@
-const HelloBlockchain = artifacts.require('HelloBlockchain');
+const TestContract = artifacts.require('TestContract');
 
 module.exports = async (callback) => {
   try {
-    const helloBlockchain = await HelloBlockchain.deployed();
-    const reciept = await helloBlockchain.SendRequest("Hello World");
+    const testContract = await TestContract.deployed();
+    const reciept = await testContract.SendRequest("Hello World");
     console.log(reciept);
 
   } catch(err) {
