@@ -11,3 +11,6 @@ Here is a link to the [ERC-721 NFT Standard](https://eips.ethereum.org/EIPS/eip-
 
 ## Instructions
 * Follow [Smart Contract Development Environment](https://www.notion.so/Smart-Contract-Development-Environment-7b72d463198342ff87779840b47666b4) for steps on setup.
+
+## References
+* [How to build an NFT markeplace dApp on Ethereum or Optimism](https://trufflesuite.com/guides/nft-marketplace/#overview)
