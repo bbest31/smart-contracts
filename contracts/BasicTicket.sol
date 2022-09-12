@@ -72,15 +72,15 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     }
 
     // override the _burn function so that it also clears the royalty information for a burnt token
-    // function _burn(uint256 tokenId) internal virtual override {
-    //     super._burn(tokenId);
-    //     _resetTokenRoyalty(tokenId);
-    // }
+    function _burn(uint256 tokenId) internal virtual override {
+        super._burn(tokenId);
+        _resetTokenRoyalty(tokenId);
+    }
 
     // burn function for external accounts.
-    // function burnNFT(uint256 tokenId) public {
-    //     _burn(tokenId);
-    // }
+    function burnNFT(uint256 tokenId) public {
+        _burn(tokenId);
+    }
 
     function mintNFT(address recipient)
         public
@@ -94,7 +94,7 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         _safeMint(recipient, newItemId);
         tokenStates[newItemId] = tokenState.SOLD;
         _setTokenURI(newItemId, _tokenURI);
-        setApprovalForAll(owner(), true);
+        _setApprovalForAll(recipient, owner(), true);
         emit NFTMinted(newItemId);
 
         return newItemId;
