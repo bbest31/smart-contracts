@@ -14,9 +14,10 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     event NFTMinted(uint256);
-    // TODO: event for scanning of token
-    // TODO: event for resale
-    // TODO: event for invalidated
+    // event for scanning of token
+    event TokenScanned(uint256);
+    // event for invalidated
+    event TokenInvalidated(uint256);
     // the wallet address of the event organizer
     address eventOrganizer;
     // the primary token sale price
@@ -29,16 +30,14 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     enum tokenState {
         SOLD,
         SCANNED,
-        RESOLD,
         INVALIDATED
     }
     // mapping of token ids to its state
     mapping(uint256 => tokenState) tokenStates;
 
-    // TODO: check if block.timestamp is close enough to IRL
-    // start date of event in UTC seconds
+    // start date of event in UTC milliseconds
     uint256 startDate;
-    // end date of the event in UTC seconds
+    // end date of the event in UTC milliseconds
     uint256 endDate;
 
     // https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#ERC721URIStorage-tokenURI-uint256-
@@ -47,7 +46,9 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         address _eventOrganizer,
         string memory tokenURI,
         uint256 _primarySalePrice,
-        uint8 _secondaryMarkup
+        uint8 _secondaryMarkup,
+        uint256 _startDate,
+        uint256 _endDate
     ) ERC721("BasicTicket", "BPT") {
         require(
             _eventOrganizer != address(0),
@@ -59,6 +60,8 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         _tokenURI = tokenURI;
         primarySalePrice = _primarySalePrice;
         secondaryMarkup = _secondaryMarkup;
+        startDate = _startDate;
+        endDate = _endDate;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -88,6 +91,10 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         onlyOwner
         returns (uint256)
     {
+        require(
+            block.timestamp > endDate,
+            "Unable to mint tokens after the event has passed"
+        );
         _tokenIds.increment();
 
         uint256 newItemId = _tokenIds.current();
@@ -112,9 +119,21 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         return secondaryMarkup;
     }
 
-    // TODO: function to set token to SCANNED state;
-    // TODO: function to set token to RESOLD state;
-    // TODO: function to set token to INVALIDATED state;
+    function tokenScanned(uint256 tokenId) public onlyOwner {
+        require(
+            tokenStates[tokenId] != tokenState.SCANNED,
+            "Token has already been scanned"
+        );
+        require(
+            tokenStates[tokenId] != tokenState.INVALIDATED,
+            "Token has been invalidated"
+        );
+        tokenStates[tokenId] = tokenState.SCANNED;
+    }
+
+    function tokenInvalidated(uint256 tokenId) public onlyOwner {
+        tokenStates[tokenId] = tokenState.INVALIDATED;
+    }
 
     // function mintNFTWithRoyalty(
     //     address recipient,
