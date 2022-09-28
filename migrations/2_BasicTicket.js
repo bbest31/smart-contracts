@@ -11,16 +11,18 @@ module.exports = function (
   endDate
 ) {
   if (network == "development") {
-    let start = new Date();
-    let end = start.setDate(start.getDate() + 3); // 3 days ahead of the start
-    
+    let date = new Date();
+    let start = date.getUTCMilliseconds();
+    date.setDate(date.getDate() + 3); // 3 days ahead of the start
+    let end = date.getUTCMilliseconds();
+
     deployer.deploy(
       BasicTicket,
       "0x31bc80aF9F05Ea398Ada5eCE0e9087Ab76e3b9ac",
       "https://ibb.co/7yBDfqk",
       100,
       0,
-      start.getUTCMilliseconds(),
+      start,
       end
     );
   } else {

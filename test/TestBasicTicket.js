@@ -14,14 +14,14 @@ contract("BasicTicket", function (accounts) {
   });
   it("should return the correct royalty info when specified and burned", async () => {
     const basicTicketInstance = await BasicTicket.deployed();
-    await basicTicketInstance.mintNFT(accounts[0], "fakeURI");
+    await basicTicketInstance.mintNFT(accounts[0]);
     // Override royalty for this token to be 10% and paid to a different account
-    await basicTicketInstance.mintNFTWithRoyalty(
-      accounts[0],
-      "fakeURI",
-      accounts[1],
-      1000
-    );
+    // await basicTicketInstance.mintNFTWithRoyalty(
+    //   accounts[0],
+    //   "fakeURI",
+    //   accounts[1],
+    //   1000
+    // );
 
     const defaultRoyaltyInfo = await basicTicketInstance.royaltyInfo.call(
       1,
