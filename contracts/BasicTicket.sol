@@ -54,6 +54,10 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
             _eventOrganizer != address(0),
             "Event organizer can't be the zero address"
         );
+        require(
+            _endDate >= block.timestamp,
+            "Event end date can't be in the past"
+        );
         // set event organizer royalty to be 10%
         _setDefaultRoyalty(_eventOrganizer, 1000);
         eventOrganizer = _eventOrganizer;
