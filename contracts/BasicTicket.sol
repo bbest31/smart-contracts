@@ -58,6 +58,11 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
             _endDate >= block.timestamp,
             "Event end date can't be in the past"
         );
+        require(
+            _startDate <= _endDate,
+            "Invalid start and end date relationship."
+        );
+        require(bytes(tokenURI).length != 0, "Token URI must not be empty");
         // set event organizer royalty to be 10%
         _setDefaultRoyalty(_eventOrganizer, 1000);
         eventOrganizer = _eventOrganizer;
@@ -96,7 +101,7 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         returns (uint256)
     {
         require(
-            block.timestamp > endDate,
+            block.timestamp <= endDate,
             "Unable to mint tokens after the event has passed"
         );
         _tokenIds.increment();
