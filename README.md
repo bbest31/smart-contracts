@@ -10,13 +10,13 @@ Here is a link to the [ERC-721 NFT Standard](https://eips.ethereum.org/EIPS/eip-
 * npm
 
 ## Instructions
+* Follow [Smart Contract Development Environment](https://www.notion.so/Smart-Contract-Development-Environment-7b72d463198342ff87779840b47666b4) for steps on setup.
 
+### Minting Tickets
+1. Wallet 1 should be used to deploy the ticket contract.
+2. A second wallet Wallet 2 can be set as the event organizer.
+3. Only Wallet 1 can be used to call the mintNFT function.
+4. Wallet 1 can't be the recipient of the mintNFT.
 
-### VS Code using Truffle (Recommended)
-
-* `npm install -g truffle` (may need to run command prompt as administrator to perform).
-* `npm install` to retrieve all used packages.
-* To compile contracts run `truffle compile`. 
-* To test run `truffle test ./test/TestContractName.sol`
-* To deploy a development blockchain run `truffle develop`.
-* to deploy contracts to development blockchain run `migrate` within the Truffle Develop prompt.
+## References
+* [How to build an NFT markeplace dApp on Ethereum or Optimism](https://trufflesuite.com/guides/nft-marketplace/#overview)
