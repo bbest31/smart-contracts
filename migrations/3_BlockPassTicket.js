@@ -1,4 +1,4 @@
-const BasicTicket = artifacts.require("BasicTicket");
+const BlockPassTicket = artifacts.require("BlockPassTicket");
 
 module.exports = function (
   deployer,
@@ -8,7 +8,8 @@ module.exports = function (
   primarySalePrice,
   secondaryMarkup,
   startDate,
-  endDate
+  endDate,
+  supply
 ) {
   if (network == "development") {
     let date = new Date();
@@ -17,23 +18,25 @@ module.exports = function (
     let end = date.getUTCMilliseconds();
 
     deployer.deploy(
-      BasicTicket,
+      BlockPassTicket,
       "0x31bc80aF9F05Ea398Ada5eCE0e9087Ab76e3b9ac",
       "https://ibb.co/7yBDfqk",
       100,
       0,
       start,
-      end
+      end,
+      10
     );
   } else {
     deployer.deploy(
-      BasicTicket,
+      BlockPassTicket,
       eventOrgAddress,
       tokenURI,
       primarySalePrice,
       secondaryMarkup,
       startDate,
-      endDate
+      endDate,
+      supply
     );
   }
 };

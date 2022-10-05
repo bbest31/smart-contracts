@@ -1,4 +1,4 @@
-// contracts/BasicTicket.sol
+// contracts/BlockPassTicket.sol
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol"; // https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
+contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     event NFTMinted(uint256);
@@ -20,10 +20,14 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     event TokenInvalidated(uint256);
     // the wallet address of the event organizer
     address eventOrganizer;
+    // the address of the marketplace contract
+    address marketplaceContract;
     // the primary token sale price
     uint256 primarySalePrice;
     // the max percentage a token can be marked up if resold before the event.
-    uint8 secondaryMarkup;
+    uint8 secondaryMarkup; // ex. 0.1 for 10%
+    // the max supply of tickets that can be minted
+    uint256 supply;
     // the uri pointing to the token asset
     string _tokenURI;
     // the state of a token
@@ -43,16 +47,22 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     // https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#ERC721URIStorage-tokenURI-uint256-
 
     constructor(
+        address _marketplaceContract,
         address _eventOrganizer,
         string memory tokenURI,
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
         uint256 _startDate,
-        uint256 _endDate
-    ) ERC721("BasicTicket", "BPT") {
+        uint256 _endDate,
+        uint256 _supply
+    ) ERC721("BlockPassTicket", "BPT") {
         require(
             _eventOrganizer != address(0),
             "Event organizer can't be the zero address"
+        );
+        require(
+            _marketplaceContract != address(0),
+            "Marketplace contract can't be the zero address"
         );
         require(
             _endDate >= block.timestamp,
@@ -62,15 +72,20 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
             _startDate <= _endDate,
             "Invalid start and end date relationship."
         );
+        require(_supply > 0, "Supply must be greater than zero");
         require(bytes(tokenURI).length != 0, "Token URI must not be empty");
         // set event organizer royalty to be 10%
         _setDefaultRoyalty(_eventOrganizer, 1000);
+        marketplaceContract = _marketplaceContract;
         eventOrganizer = _eventOrganizer;
         _tokenURI = tokenURI;
         primarySalePrice = _primarySalePrice;
         secondaryMarkup = _secondaryMarkup;
         startDate = _startDate;
         endDate = _endDate;
+        supply = _supply;
+
+        transferOwnership(marketplaceContract);
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -104,6 +119,7 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
             block.timestamp <= endDate,
             "Unable to mint tokens after the event has passed"
         );
+        require(_tokenIds.current() < supply, "Ticket supply sold out");
         _tokenIds.increment();
 
         uint256 newItemId = _tokenIds.current();
@@ -118,6 +134,18 @@ contract BasicTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
 
     function getEventOrganizer() public view returns (address) {
         return eventOrganizer;
+    }
+
+    function getMarketplaceContract() public view returns (address) {
+        return marketplaceContract;
+    }
+
+    function getTotalTicketSupply() public view returns (uint256) {
+        return supply;
+    }
+
+    function getTotalTicketsForSale() public view returns (uint256) {
+        return supply - _tokenIds.current();
     }
 
     function getPrimarySalePrice() public view returns (uint256) {
