@@ -77,8 +77,8 @@ contract BlockPass is ReentrancyGuard {
         uint256 _supply
     ) public payable nonReentrant {
         require(
-            msg.sender == _marketOwner,
-            "Listing can only be done by the contract owner"
+            msg.sender == Ownable(_nftContract).owner(),
+            "Listing can only be done by the event contract owner"
         );
         _addressToTicketContract[_nftContract] = EventTicketContract(
             _nftContract,
@@ -91,6 +91,9 @@ contract BlockPass is ReentrancyGuard {
             _supply,
             true
         );
+
+        // transfer ownership of the contract to the marketplace.
+        Ownable(_nftContract).transferOwnership(address(this));
 
         emit EventTicketListed(
             _nftContract,

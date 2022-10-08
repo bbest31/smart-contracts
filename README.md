@@ -18,5 +18,23 @@ Here is a link to the [ERC-721 NFT Standard](https://eips.ethereum.org/EIPS/eip-
 3. Only Wallet 1 can be used to call the mintNFT function.
 4. Wallet 1 can't be the recipient of the mintNFT.
 
+### Using the marketplace contract
+
+You will need 4 wallets to test fully.
+1. BlockPass company wallet.
+2. Event organizer wallet.
+3. Attendee wallet A.
+4. Attendee wallet B.
+
+Steps to execute:
+
+1. Deploy BlockPass.sol using the BlockPass company wallet.
+2. Deploy BlockPassTicket.sol using the event organizer wallet.
+3. List the ticket contract on the marketplace using the event organizer wallet.
+4. Buy a ticket using the attendee wallet A.
+5. List a ticket for resale using the attendee wallet A.
+6. Buy the secondary sale ticket using the attendee wallet B.
+
+
 ## References
 * [How to build an NFT markeplace dApp on Ethereum or Optimism](https://trufflesuite.com/guides/nft-marketplace/#overview)

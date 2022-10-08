@@ -85,7 +85,6 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         endDate = _endDate;
         supply = _supply;
 
-        transferOwnership(marketplaceContract);
     }
 
     function supportsInterface(bytes4 interfaceId)
