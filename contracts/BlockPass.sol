@@ -68,7 +68,7 @@ contract BlockPass is ReentrancyGuard {
 
     // List the ticket contract on the marketplace
     function listTicketContract(
-        address _nftContract,
+        address _ticketContract,
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
         address _eventOrganizer,
@@ -77,11 +77,11 @@ contract BlockPass is ReentrancyGuard {
         uint256 _supply
     ) public payable nonReentrant {
         require(
-            msg.sender == Ownable(_nftContract).owner(),
+            msg.sender == Ownable(_ticketContract).owner(),
             "Listing can only be done by the event contract owner"
         );
-        _addressToTicketContract[_nftContract] = EventTicketContract(
-            _nftContract,
+        _addressToTicketContract[_ticketContract] = EventTicketContract(
+            _ticketContract,
             _primarySalePrice,
             _secondaryMarkup,
             payable(_eventOrganizer),
@@ -93,10 +93,10 @@ contract BlockPass is ReentrancyGuard {
         );
 
         // transfer ownership of the contract to the marketplace.
-        Ownable(_nftContract).transferOwnership(address(this));
+        Ownable(_ticketContract).transferOwnership(address(this));
 
         emit EventTicketListed(
-            _nftContract,
+            _ticketContract,
             _eventOrganizer,
             _primarySalePrice,
             _startDate,
@@ -105,9 +105,9 @@ contract BlockPass is ReentrancyGuard {
     }
 
     // Buy a ticket
-    function buyTicket(address _nftContract) public payable nonReentrant {
+    function buyTicket(address _ticketContract) public payable nonReentrant {
         EventTicketContract storage ticketContract = _addressToTicketContract[
-            _nftContract
+            _ticketContract
         ];
         require(
             msg.value >= ticketContract.primarySalePrice,
@@ -122,14 +122,14 @@ contract BlockPass is ReentrancyGuard {
         payable(ticketContract.eventOrganizer).transfer(
             ticketContract.primarySalePrice.div(100).mul(EO_TAKE)
         );
-        uint256 tokenId = BlockPassTicket(_nftContract).mintNFT(buyer);
+        uint256 tokenId = BlockPassTicket(_ticketContract).mintNFT(buyer);
         _marketOwner.transfer(
             ticketContract.primarySalePrice.div(100).mul(TAKE_RATE)
         );
 
         _primarySales.increment();
         emit TicketSold(
-            _nftContract,
+            _ticketContract,
             tokenId,
             ticketContract.eventOrganizer,
             buyer,
@@ -140,20 +140,20 @@ contract BlockPass is ReentrancyGuard {
         //if the last ticket is sold then mark as not active.
         if (tokenId == ticketContract.supply) {
             ticketContract.active = false;
-            _addressToTicketContract[_nftContract] = ticketContract;
+            _addressToTicketContract[_ticketContract] = ticketContract;
         }
     }
 
     // List an individual ticket purchased from the marketplace for resale
     function resellTicket(
-        address _nftContract,
+        address _ticketContract,
         uint256 _tokenId,
         uint256 _price
     ) public payable nonReentrant {
         require(_price > 0, "Price must be at least 1 wei");
 
         EventTicketContract storage ticketContract = _addressToTicketContract[
-            _nftContract
+            _ticketContract
         ];
         // disallow prices above the set secondary markup if event has not yet passed.
         if (block.timestamp <= ticketContract.endDate) {
@@ -167,26 +167,26 @@ contract BlockPass is ReentrancyGuard {
             );
         }
 
-        IERC721(_nftContract).transferFrom(msg.sender, address(this), _tokenId);
+        IERC721(_ticketContract).transferFrom(msg.sender, address(this), _tokenId);
 
-        _secondaryMarket[_nftContract][_tokenId] = Ticket(
-            _nftContract,
+        _secondaryMarket[_ticketContract][_tokenId] = Ticket(
+            _ticketContract,
             payable(msg.sender),
             _price
         );
 
-        emit TicketListed(_nftContract, _tokenId, msg.sender, _price);
+        emit TicketListed(_ticketContract, _tokenId, msg.sender, _price);
     }
 
-    function buySecondaryTicket(address _nftContract, uint256 _tokenId)
+    function buySecondaryTicket(address _ticketContract, uint256 _tokenId)
         public
         payable
         nonReentrant
     {
-        Ticket storage ticket = _secondaryMarket[_nftContract][_tokenId];
+        Ticket storage ticket = _secondaryMarket[_ticketContract][_tokenId];
         require(msg.value >= ticket.price, "Funds do not cover ticket cost");
 
-        (address _receiver, uint256 _royalty) = ERC2981(_nftContract)
+        (address _receiver, uint256 _royalty) = ERC2981(_ticketContract)
             .royaltyInfo(_tokenId, ticket.price);
 
         // pay royalties
@@ -194,13 +194,13 @@ contract BlockPass is ReentrancyGuard {
         // pay seller
         payable(ticket.owner).transfer(ticket.price.sub(_royalty));
         // transfer ticket
-        IERC721(_nftContract).transferFrom(ticket.owner, msg.sender, _tokenId);
+        IERC721(_ticketContract).transferFrom(ticket.owner, msg.sender, _tokenId);
 
         _secondarySales.increment();
         emit TicketSold(
-            _nftContract,
+            _ticketContract,
             _tokenId,
-            _addressToTicketContract[_nftContract].eventOrganizer,
+            _addressToTicketContract[_ticketContract].eventOrganizer,
             msg.sender,
             ticket.price,
             false

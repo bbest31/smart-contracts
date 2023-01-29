@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol"; // https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./BlockPass.sol";
 
 contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     using Counters for Counters.Counter;
@@ -84,7 +85,6 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         startDate = _startDate;
         endDate = _endDate;
         supply = _supply;
-
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -169,6 +169,21 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
 
     function tokenInvalidated(uint256 tokenId) public onlyOwner {
         tokenStates[tokenId] = tokenState.INVALIDATED;
+    }
+
+    function listTicketContract() public onlyOwner {
+        BlockPass(marketplaceContract).listTicketContract(
+            address(this),
+            primarySalePrice,
+            secondaryMarkup,
+            eventOrganizer,
+            startDate,
+            endDate,
+            supply
+        );
+        
+        // transfer ownership of the contract to the marketplace.
+        Ownable(address(this)).transferOwnership(marketplaceContract);
     }
 
     // function mintNFTWithRoyalty(
