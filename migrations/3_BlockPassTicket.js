@@ -3,6 +3,7 @@ const BlockPassTicket = artifacts.require("BlockPassTicket");
 module.exports = function (
   deployer,
   network,
+  marketplaceContract,
   eventOrgAddress,
   tokenURI,
   primarySalePrice,
@@ -13,23 +14,25 @@ module.exports = function (
 ) {
   if (network == "development") {
     let date = new Date();
-    let start = date.getUTCMilliseconds();
+    let start = date.valueOf();
     date.setDate(date.getDate() + 3); // 3 days ahead of the start
-    let end = date.getUTCMilliseconds();
+    let end = date.valueOf();
 
     deployer.deploy(
       BlockPassTicket,
-      "0x31bc80aF9F05Ea398Ada5eCE0e9087Ab76e3b9ac",
+      marketplaceContract,
+      eventOrgAddress,
       "https://ibb.co/7yBDfqk",
-      100,
-      0,
+      primarySalePrice,
+      secondaryMarkup,
       start,
       end,
-      10
+      supply
     );
   } else {
     deployer.deploy(
       BlockPassTicket,
+      marketplaceContract,
       eventOrgAddress,
       tokenURI,
       primarySalePrice,
