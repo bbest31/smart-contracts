@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./BlockPassTicket.sol";
 
 contract BlockPass is ReentrancyGuard {
@@ -64,6 +65,10 @@ contract BlockPass is ReentrancyGuard {
 
     constructor() {
         _marketOwner = payable(msg.sender);
+    }
+
+   function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     // List the ticket contract on the marketplace
