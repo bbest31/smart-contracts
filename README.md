@@ -29,11 +29,11 @@ You will need 4 wallets to test fully.
 Steps to execute:
 
 1. Deploy BlockPass.sol using the BlockPass company wallet.
-2. Deploy BlockPassTicket.sol using the event organizer wallet.
-3. List the ticket contract on the marketplace using the event organizer wallet.
-4. Buy a ticket using the attendee wallet A.
-5. List a ticket for resale using the attendee wallet A.
-6. Buy the secondary sale ticket using the attendee wallet B.
+2. Deploy TicketExample.sol using the event organizer wallet.
+3. List the ticket contract on the marketplace using the event organizer wallet, via the `listTicketContract` function on the ticket contract.
+4. Buy a ticket using the attendee wallet A via the marketplace contract.
+5. List a ticket for resale using the attendee wallet A via the marketplace contract.
+6. Buy the secondary sale ticket using the attendee wallet B via the marketplace contract.
 
 
 ## References
