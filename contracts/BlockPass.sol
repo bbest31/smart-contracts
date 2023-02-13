@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "./IBlockPassTicket.sol";
 import "./BlockPassTicket.sol";
 
 contract BlockPass is ReentrancyGuard {
@@ -67,7 +69,12 @@ contract BlockPass is ReentrancyGuard {
         _marketOwner = payable(msg.sender);
     }
 
-   function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -82,10 +89,22 @@ contract BlockPass is ReentrancyGuard {
         uint256 _supply
     ) public payable nonReentrant {
         // require it to not already be listed, and caller to be the contract itself via the RBAC enforced listTicketContract function.
-        require(_addressToTicketContract[_ticketContract].ticketContract == address(0), "Ticket already registerd with marketplace.");
-        require(msg.sender == _ticketContract, "Caller does not have contract listing permissions.");
-        // TODO require contract address to implement BlockPassTicket.sol interface
-
+        require(
+            ERC165Checker.supportsInterface(
+                _ticketContract,
+                type(IBlockPassTicket).interfaceId
+            ),
+            "Contract doesn't inherit IBlockPassTicket interface."
+        );
+        require(
+            _addressToTicketContract[_ticketContract].ticketContract ==
+                address(0),
+            "Ticket already registerd with marketplace."
+        );
+        require(
+            msg.sender == _ticketContract,
+            "Caller does not have contract listing permissions."
+        );
 
         _addressToTicketContract[_ticketContract] = EventTicketContract(
             _ticketContract,
@@ -113,7 +132,10 @@ contract BlockPass is ReentrancyGuard {
         EventTicketContract storage ticketContract = _addressToTicketContract[
             _ticketContract
         ];
-        require(ticketContract.owner != address(0),"Ticket contract does not exist.");
+        require(
+            ticketContract.owner != address(0),
+            "Ticket contract does not exist."
+        );
         require(
             msg.value >= ticketContract.primarySalePrice,
             "Not enough funds to cover the sale price"
@@ -159,9 +181,15 @@ contract BlockPass is ReentrancyGuard {
         EventTicketContract storage ticketContract = _addressToTicketContract[
             _ticketContract
         ];
-        require(ticketContract.owner != address(0), "Ticket contract does not exist.");
+        require(
+            ticketContract.owner != address(0),
+            "Ticket contract does not exist."
+        );
         Ticket storage ticket = _secondaryMarket[_ticketContract][_tokenId];
-        require(ticket.owner == address(0),"Ticket is already listed for sale.");
+        require(
+            ticket.owner == address(0),
+            "Ticket is already listed for sale."
+        );
 
         // disallow prices above the set secondary markup if event has not yet passed.
         if (block.timestamp <= ticketContract.endDate) {
@@ -171,11 +199,16 @@ contract BlockPass is ReentrancyGuard {
                 _price <=
                     ticketContract.primarySalePrice.add(
                         primarySalePrice.div(100).mul(secondaryMarkup)
-                    ), "Price set above secondary markup limit. Price increase allowed after event end date."
+                    ),
+                "Price set above secondary markup limit. Price increase allowed after event end date."
             );
         }
 
-        IERC721(_ticketContract).safeTransferFrom(msg.sender, address(this), _tokenId);
+        IERC721(_ticketContract).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _tokenId
+        );
 
         _secondaryMarket[_ticketContract][_tokenId] = Ticket(
             _ticketContract,
@@ -192,7 +225,7 @@ contract BlockPass is ReentrancyGuard {
         nonReentrant
     {
         Ticket storage ticket = _secondaryMarket[_ticketContract][_tokenId];
-        require(ticket.owner != address(0),"Ticket does not exist.");
+        require(ticket.owner != address(0), "Ticket does not exist.");
         require(msg.value >= ticket.price, "Funds do not cover ticket cost");
 
         (address _receiver, uint256 _royalty) = ERC2981(_ticketContract)
@@ -203,7 +236,11 @@ contract BlockPass is ReentrancyGuard {
         // pay seller
         payable(ticket.owner).transfer(ticket.price.sub(_royalty));
         // transfer ticket
-        IERC721(_ticketContract).safeTransferFrom(address(this), msg.sender, _tokenId);
+        IERC721(_ticketContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            _tokenId
+        );
 
         _secondarySales.increment();
         emit TicketSold(
