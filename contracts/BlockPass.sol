@@ -76,10 +76,12 @@ contract BlockPass is ReentrancyGuard {
         uint256 _endDate,
         uint256 _supply
     ) public payable nonReentrant {
-        require(
-            msg.sender == Ownable(_ticketContract).owner(),
-            "Listing can only be done by the event contract owner"
-        );
+        // require it to not already be listed, and caller to be the contract itself via the RBAC enforced listTicketContract function.
+        require(_addressToTicketContract[_ticketContract].ticketContract == address(0), "Ticket already registerd with marketplace.");
+        require(msg.sender == _ticketContract, "Caller does not have contract listing permissions.");
+        // TODO require contract address to implement BlockPassTicket.sol interface
+
+
         _addressToTicketContract[_ticketContract] = EventTicketContract(
             _ticketContract,
             _primarySalePrice,
@@ -91,9 +93,6 @@ contract BlockPass is ReentrancyGuard {
             _supply,
             true
         );
-
-        // transfer ownership of the contract to the marketplace.
-        Ownable(_ticketContract).transferOwnership(address(this));
 
         emit EventTicketListed(
             _ticketContract,
@@ -109,6 +108,7 @@ contract BlockPass is ReentrancyGuard {
         EventTicketContract storage ticketContract = _addressToTicketContract[
             _ticketContract
         ];
+        require(ticketContract.owner != address(0),"Ticket contract does not exist.");
         require(
             msg.value >= ticketContract.primarySalePrice,
             "Not enough funds to cover the sale price"
@@ -151,10 +151,13 @@ contract BlockPass is ReentrancyGuard {
         uint256 _price
     ) public payable nonReentrant {
         require(_price > 0, "Price must be at least 1 wei");
-
         EventTicketContract storage ticketContract = _addressToTicketContract[
             _ticketContract
         ];
+        require(ticketContract.owner != address(0), "Ticket contract does not exist.");
+        Ticket storage ticket = _secondaryMarket[_ticketContract][_tokenId];
+        require(ticket.owner == address(0),"Ticket is already listed for sale.");
+
         // disallow prices above the set secondary markup if event has not yet passed.
         if (block.timestamp <= ticketContract.endDate) {
             uint8 secondaryMarkup = ticketContract.secondaryMarkup;
@@ -162,12 +165,12 @@ contract BlockPass is ReentrancyGuard {
             require(
                 _price <=
                     ticketContract.primarySalePrice.add(
-                        primarySalePrice.mul(secondaryMarkup)
-                    )
+                        primarySalePrice.div(100).mul(secondaryMarkup)
+                    ), "Price set above secondary markup limit. Price increase allowed after event end date."
             );
         }
 
-        IERC721(_ticketContract).transferFrom(msg.sender, address(this), _tokenId);
+        IERC721(_ticketContract).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         _secondaryMarket[_ticketContract][_tokenId] = Ticket(
             _ticketContract,
@@ -184,6 +187,7 @@ contract BlockPass is ReentrancyGuard {
         nonReentrant
     {
         Ticket storage ticket = _secondaryMarket[_ticketContract][_tokenId];
+        require(ticket.owner != address(0),"Ticket does not exist.");
         require(msg.value >= ticket.price, "Funds do not cover ticket cost");
 
         (address _receiver, uint256 _royalty) = ERC2981(_ticketContract)
@@ -194,7 +198,7 @@ contract BlockPass is ReentrancyGuard {
         // pay seller
         payable(ticket.owner).transfer(ticket.price.sub(_royalty));
         // transfer ticket
-        IERC721(_ticketContract).transferFrom(ticket.owner, msg.sender, _tokenId);
+        IERC721(_ticketContract).safeTransferFrom(address(this), msg.sender, _tokenId);
 
         _secondarySales.increment();
         emit TicketSold(
@@ -205,6 +209,8 @@ contract BlockPass is ReentrancyGuard {
             ticket.price,
             false
         );
+        // remove ticket from secondary market
+        delete _secondaryMarket[_ticketContract][_tokenId];
     }
 
     //==============================Attendee/Query Functions=====================================

@@ -1,17 +1,17 @@
 // contracts/BlockPassTicket.sol
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
+pragma solidity >=0.5.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 //This implementation of ERC721 is used so that we store the tokenURIs on chain in storage, which is what allows us to store the metadata we upload to IPFS off-chain.
 // https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#ERC721URIStorage
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol"; // https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable
+import "@openzeppelin/contracts/access/AccessControl.sol"; // https://docs.openzeppelin.com/contracts/4.x/api/access#AccessControl
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./BlockPass.sol";
 
-contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
+contract BlockPassTicket is ERC721URIStorage, ERC2981, AccessControl, Pausable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     event NFTMinted(uint256);
@@ -26,7 +26,7 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     // the primary token sale price
     uint256 primarySalePrice;
     // the max percentage a token can be marked up if resold before the event.
-    uint8 secondaryMarkup; // ex. 0.1 for 10%
+    uint8 secondaryMarkup; // ex. 10 for 10%
     // the max supply of tickets that can be minted
     uint256 supply;
     // the uri pointing to the token asset
@@ -37,6 +37,8 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         SCANNED,
         INVALIDATED
     }
+    // contract access control roles
+    bytes32 public constant CONTROLLER = keccak256("CONTROLLER");
     // mapping of token ids to its state
     mapping(uint256 => tokenState) tokenStates;
 
@@ -75,6 +77,7 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         );
         require(_supply > 0, "Supply must be greater than zero");
         require(bytes(tokenURI).length != 0, "Token URI must not be empty");
+        _grantRole(CONTROLLER, msg.sender);
         // set event organizer royalty to be 10%
         _setDefaultRoyalty(_eventOrganizer, 1000);
         marketplaceContract = _marketplaceContract;
@@ -87,11 +90,12 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         supply = _supply;
     }
 
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC721, ERC2981)
+        override(ERC721, ERC2981, AccessControl)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -111,7 +115,7 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
     function mintNFT(address recipient)
         public
         whenNotPaused
-        onlyOwner
+        onlyRole(CONTROLLER)
         returns (uint256)
     {
         require(
@@ -120,12 +124,11 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         );
         require(_tokenIds.current() < supply, "Ticket supply sold out");
         _tokenIds.increment();
-
         uint256 newItemId = _tokenIds.current();
         _safeMint(recipient, newItemId);
         tokenStates[newItemId] = tokenState.SOLD;
         _setTokenURI(newItemId, _tokenURI);
-        _setApprovalForAll(recipient, owner(), true);
+        _setApprovalForAll(recipient, marketplaceContract, true);
         emit NFTMinted(newItemId);
 
         return newItemId;
@@ -155,7 +158,8 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         return secondaryMarkup;
     }
 
-    function tokenScanned(uint256 tokenId) public onlyOwner {
+    function tokenScanned(uint256 tokenId) public onlyRole(CONTROLLER) {
+        // require(hasRole(CONTROLLER, msg.sender), "Caller is not a controller");
         require(
             tokenStates[tokenId] != tokenState.SCANNED,
             "Token has already been scanned"
@@ -167,11 +171,12 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
         tokenStates[tokenId] = tokenState.SCANNED;
     }
 
-    function tokenInvalidated(uint256 tokenId) public onlyOwner {
+    function tokenInvalidated(uint256 tokenId) public {
+        require(hasRole(CONTROLLER, msg.sender), "Caller is not a controller");
         tokenStates[tokenId] = tokenState.INVALIDATED;
     }
 
-    function listTicketContract() public onlyOwner {
+    function listTicketContract() public onlyRole(CONTROLLER) {
         BlockPass(marketplaceContract).listTicketContract(
             address(this),
             primarySalePrice,
@@ -182,8 +187,8 @@ contract BlockPassTicket is ERC721URIStorage, ERC2981, Ownable, Pausable {
             supply
         );
         
-        // transfer ownership of the contract to the marketplace.
-        Ownable(address(this)).transferOwnership(marketplaceContract);
+        // grant controller role of the contract to the marketplace.
+        _grantRole(CONTROLLER, marketplaceContract);
     }
 
     // function mintNFTWithRoyalty(
