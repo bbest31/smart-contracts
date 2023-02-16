@@ -137,8 +137,8 @@ contract BlockPass is ReentrancyGuard {
             "Ticket contract does not exist."
         );
         require(
-            msg.value >= ticketContract.primarySalePrice,
-            "Not enough funds to cover the sale price"
+            msg.value == ticketContract.primarySalePrice,
+            "Funds should match the sales price."
         );
         require(
             ticketContract.active != false,
