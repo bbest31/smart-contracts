@@ -1,39 +1,51 @@
-const BasicTicket = artifacts.require("BasicTicket");
+const TicketExample = artifacts.require("TicketExample");
 
 module.exports = function (
   deployer,
   network,
+  name,
+  symbol,
+  marketplaceContract,
   eventOrgAddress,
   tokenURI,
   primarySalePrice,
   secondaryMarkup,
   startDate,
-  endDate
+  endDate,
+  supply
 ) {
   if (network == "development") {
     let date = new Date();
-    let start = date.getUTCMilliseconds();
+    let start = date.valueOf();
     date.setDate(date.getDate() + 3); // 3 days ahead of the start
-    let end = date.getUTCMilliseconds();
+    let end = date.valueOf();
 
     deployer.deploy(
-      BasicTicket,
-      "0x31bc80aF9F05Ea398Ada5eCE0e9087Ab76e3b9ac",
+      TicketExample,
+      name,
+      symbol,
+      marketplaceContract,
+      eventOrgAddress,
       "https://ibb.co/7yBDfqk",
-      100,
-      0,
+      primarySalePrice,
+      secondaryMarkup,
       start,
-      end
+      end,
+      supply
     );
   } else {
     deployer.deploy(
-      BasicTicket,
+      TicketExample,
+      name,
+      symbol,
+      marketplaceContract,
       eventOrgAddress,
       tokenURI,
       primarySalePrice,
       secondaryMarkup,
       startDate,
-      endDate
+      endDate,
+      supply
     );
   }
 };
