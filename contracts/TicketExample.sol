@@ -14,6 +14,7 @@ contract TicketExample is BlockPassTicket, ERC165Storage {
         string memory tokenURI,
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
+        uint96 _feeNumerator,
         uint256 _startDate,
         uint256 _endDate,
         uint256 _supply
@@ -25,6 +26,7 @@ contract TicketExample is BlockPassTicket, ERC165Storage {
         tokenURI,
         _primarySalePrice,
         _secondaryMarkup,
+        _feeNumerator,
         _startDate,
         _endDate,
         _supply) {}

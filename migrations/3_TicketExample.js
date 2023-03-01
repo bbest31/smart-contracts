@@ -10,6 +10,7 @@ module.exports = function (
   tokenURI,
   primarySalePrice,
   secondaryMarkup,
+  feeNumerator,
   startDate,
   endDate,
   supply
@@ -29,6 +30,7 @@ module.exports = function (
       "https://ibb.co/7yBDfqk",
       primarySalePrice,
       secondaryMarkup,
+      feeNumerator,
       start,
       end,
       supply
