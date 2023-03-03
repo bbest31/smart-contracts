@@ -191,18 +191,10 @@ contract BlockPass is ReentrancyGuard {
             "Ticket is already listed for sale."
         );
 
-        // disallow prices above the set secondary markup if event has not yet passed.
-        if (block.timestamp <= ticketContract.endDate) {
-            uint8 secondaryMarkup = ticketContract.secondaryMarkup;
-            uint256 primarySalePrice = ticketContract.primarySalePrice;
-            require(
-                _price <=
-                    ticketContract.primarySalePrice.add(
-                        primarySalePrice.div(100).mul(secondaryMarkup)
-                    ),
-                "Price set above secondary markup limit. Price increase allowed after event end date."
-            );
-        }
+        require(
+            isPriceProtectionValid(ticketContract, _price),
+            "Price set above secondary markup limit. Price increase allowed after event end date."
+        );
 
         IERC721(_ticketContract).safeTransferFrom(
             msg.sender,
@@ -217,6 +209,40 @@ contract BlockPass is ReentrancyGuard {
         );
 
         emit TicketListed(_ticketContract, _tokenId, msg.sender, _price);
+    }
+
+    // update the sale price for a ticket in the secondary market.
+    function updateTicketSalePrice(
+        uint256 _newPrice,
+        address _ticketContractAddr,
+        uint256 _tokenId
+    ) public nonReentrant {
+        require(_newPrice > 0, "Price must be at least 1 wei");
+        Ticket memory resaleTicket = _secondaryMarket[_ticketContractAddr][
+            _tokenId
+        ];
+        require(
+            resaleTicket.ticketContract != address(0),
+            "Ticket does not exist, or is not for sale."
+        );
+        require(
+            resaleTicket.owner == msg.sender,
+            "Sending address does not own the token."
+        );
+        EventTicketContract storage ticketContract = _addressToTicketContract[
+            _ticketContractAddr
+        ];
+        require(
+            isPriceProtectionValid(ticketContract, _newPrice),
+            "Price set above secondary markup limit. Price increase allowed after event end date."
+        );
+
+        // set the new price
+        _secondaryMarket[_ticketContractAddr][_tokenId] = Ticket(
+            _ticketContractAddr,
+            payable(msg.sender),
+            _newPrice
+        );
     }
 
     function buySecondaryTicket(address _ticketContract, uint256 _tokenId)
@@ -253,6 +279,27 @@ contract BlockPass is ReentrancyGuard {
         );
         // remove ticket from secondary market
         delete _secondaryMarket[_ticketContract][_tokenId];
+    }
+
+    function isPriceProtectionValid(
+        EventTicketContract memory ticketContract,
+        uint256 _price
+    ) private view returns (bool) {
+        // disallow prices above the set secondary markup if event has not yet passed.
+        if (block.timestamp <= ticketContract.endDate) {
+            uint8 secondaryMarkup = ticketContract.secondaryMarkup;
+            uint256 primarySalePrice = ticketContract.primarySalePrice;
+            if (
+                _price <=
+                ticketContract.primarySalePrice.add(
+                    primarySalePrice.div(100).mul(secondaryMarkup)
+                )
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     //==============================Attendee/Query Functions=====================================
