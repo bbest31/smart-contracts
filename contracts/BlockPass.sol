@@ -78,6 +78,13 @@ contract BlockPass is ReentrancyGuard {
         return IERC721Receiver.onERC721Received.selector;
     }
 
+    // Withdraw function for market owner.
+    function marketWithdraw(uint _amount) public {
+        require(msg.sender == _marketOwner, "Action only allowed by market owner.");
+        require(_amount < address(this).balance,"Withdrawl amount exceeds contract balance.");
+        _marketOwner.transfer(_amount);
+    }
+
     // List the ticket contract on the marketplace
     function listTicketContract(
         address _ticketContract,
