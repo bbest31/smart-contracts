@@ -16,18 +16,25 @@ contract TicketExample is BlockPassTicket, ERC165Storage {
         uint8 _secondaryMarkup,
         uint256 _startDate,
         uint256 _endDate,
+        uint256 _liveDate,
+        uint256 _closeDate,
         uint256 _supply
-    ) BlockPassTicket(
-        _name,
-        _symbol, 
-        _marketplaceContract,
-        _eventOrganizer,
-        tokenURI,
-        _primarySalePrice,
-        _secondaryMarkup,
-        _startDate,
-        _endDate,
-        _supply) {}
+    )
+        BlockPassTicket(
+            _name,
+            _symbol,
+            _marketplaceContract,
+            _eventOrganizer,
+            tokenURI,
+            _primarySalePrice,
+            _secondaryMarkup,
+            _startDate,
+            _endDate,
+            _liveDate,
+            _closeDate,
+            _supply
+        )
+    {}
 
     function supportsInterface(bytes4 interfaceId)
         public

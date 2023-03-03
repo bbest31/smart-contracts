@@ -37,6 +37,8 @@ contract BlockPass is ReentrancyGuard {
         address payable owner;
         uint256 startDate;
         uint256 endDate;
+        uint256 liveDate;
+        uint256 closeDate;
         uint256 supply;
         bool active;
     }
@@ -46,7 +48,9 @@ contract BlockPass is ReentrancyGuard {
         address eventOrganizer,
         uint256 price,
         uint256 start,
-        uint256 end
+        uint256 end,
+        uint256 live,
+        uint256 close
     );
 
     event TicketSold(
@@ -86,6 +90,8 @@ contract BlockPass is ReentrancyGuard {
         address _eventOrganizer,
         uint256 _startDate,
         uint256 _endDate,
+        uint256 _liveDate,
+        uint256 _closeDate,
         uint256 _supply
     ) public payable nonReentrant {
         // require it to not already be listed, and caller to be the contract itself via the RBAC enforced listTicketContract function.
@@ -114,6 +120,8 @@ contract BlockPass is ReentrancyGuard {
             payable(address(this)),
             _startDate,
             _endDate,
+            _liveDate,
+            _closeDate,
             _supply,
             true
         );
@@ -123,7 +131,9 @@ contract BlockPass is ReentrancyGuard {
             _eventOrganizer,
             _primarySalePrice,
             _startDate,
-            _endDate
+            _endDate,
+            _liveDate,
+            _closeDate
         );
     }
 
@@ -141,8 +151,12 @@ contract BlockPass is ReentrancyGuard {
             "Funds should match the sales price."
         );
         require(
-            ticketContract.active != false,
-            "Ticket contract is not active"
+            block.timestamp > ticketContract.liveDate,
+            "Primary sale of these tickets have not yet started."
+        );
+        require(
+            block.timestamp < ticketContract.closeDate,
+            "Primary sale of these tickets have ended."
         );
 
         address payable buyer = payable(msg.sender);

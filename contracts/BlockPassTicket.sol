@@ -48,6 +48,10 @@ abstract contract BlockPassTicket is
     uint256 public startDate;
     // end date of the event in UTC milliseconds
     uint256 public endDate;
+    // the date this ticket tier is available for purchase.
+    uint256 public liveDate;
+    // the date this ticket tier is closed for purchase.
+    uint256 public closeDate;
 
     // https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#ERC721URIStorage-tokenURI-uint256-
 
@@ -61,6 +65,8 @@ abstract contract BlockPassTicket is
         uint8 _secondaryMarkup,
         uint256 _startDate,
         uint256 _endDate,
+        uint256 _liveDate,
+        uint256 _closeDate,
         uint256 _supply
     ) ERC721(_name, _symbol) {
         require(
@@ -79,6 +85,14 @@ abstract contract BlockPassTicket is
             _startDate <= _endDate,
             "Invalid start and end date relationship."
         );
+        require(
+            _closeDate >= block.timestamp,
+            "Ticket tier close date can't be in the past"
+        );
+        require(
+            _liveDate <= _closeDate,
+            "Invalid live and close date relationship."
+        );
         require(_supply > 0, "Supply must be greater than zero");
         require(bytes(tokenURI).length != 0, "Token URI must not be empty");
         _grantRole(CONTROLLER, msg.sender);
@@ -91,6 +105,8 @@ abstract contract BlockPassTicket is
         secondaryMarkup = _secondaryMarkup;
         startDate = _startDate;
         endDate = _endDate;
+        liveDate = _liveDate;
+        closeDate = _closeDate;
         supply = _supply;
     }
 
@@ -101,7 +117,9 @@ abstract contract BlockPassTicket is
         override(ERC721, ERC2981, AccessControl)
         returns (bool)
     {
-        return interfaceId == type(IBlockPassTicket).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IBlockPassTicket).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     // override the _burn function so that it also clears the royalty information for a burnt token
@@ -117,14 +135,14 @@ abstract contract BlockPassTicket is
 
     function mintNFT(address recipient)
         public
+        override
         whenNotPaused
         onlyRole(CONTROLLER)
-        override
         returns (uint256)
     {
         require(
-            block.timestamp <= endDate,
-            "Unable to mint tokens after the event has passed"
+            block.timestamp <= closeDate,
+            "Unable to mint tokens after the ticket tier close date has passed."
         );
         require(_tokenIds.current() < supply, "Ticket supply sold out");
         require(
@@ -152,27 +170,31 @@ abstract contract BlockPassTicket is
 
     function setMarketplaceContract(address newMarketplace)
         public
+        override
         onlyRole(CONTROLLER)
-        override 
     {
         marketplaceContract = newMarketplace;
     }
 
     function increaseTicketSupply(uint256 additionalSupply)
         public
+        override
         onlyRole(CONTROLLER)
-        override 
         returns (uint256)
     {
         supply += additionalSupply;
         return supply;
     }
 
-    function getTotalTicketsForSale() public view override  returns (uint256) {
+    function getTotalTicketsForSale() public view override returns (uint256) {
         return supply - _tokenIds.current();
     }
 
-    function setPrimarySalePrice(uint256 newPrice) public override  onlyRole(CONTROLLER) {
+    function setPrimarySalePrice(uint256 newPrice)
+        public
+        override
+        onlyRole(CONTROLLER)
+    {
         primarySalePrice = newPrice;
     }
 
@@ -180,7 +202,11 @@ abstract contract BlockPassTicket is
         secondaryMarkup = newMarkup;
     }
 
-    function tokenScanned(uint256 tokenId) public override onlyRole(CONTROLLER) {
+    function tokenScanned(uint256 tokenId)
+        public
+        override
+        onlyRole(CONTROLLER)
+    {
         require(
             tokenStates[tokenId] != tokenState.SCANNED,
             "Token has already been scanned"
@@ -193,7 +219,11 @@ abstract contract BlockPassTicket is
         tokenStates[tokenId] = tokenState.SCANNED;
     }
 
-    function tokenInvalidated(uint256 tokenId) public override onlyRole(CONTROLLER) {
+    function tokenInvalidated(uint256 tokenId)
+        public
+        override
+        onlyRole(CONTROLLER)
+    {
         require(_tokenIds.current() >= tokenId, "Token not yet minted.");
         tokenStates[tokenId] = tokenState.INVALIDATED;
     }

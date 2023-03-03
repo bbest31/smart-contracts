@@ -12,6 +12,8 @@ module.exports = function (
   secondaryMarkup,
   startDate,
   endDate,
+  liveDate,
+  closeDate,
   supply
 ) {
   if (network == "development") {
@@ -31,6 +33,8 @@ module.exports = function (
       secondaryMarkup,
       start,
       end,
+      start,
+      end,
       supply
     );
   } else {
@@ -45,6 +49,8 @@ module.exports = function (
       secondaryMarkup,
       startDate,
       endDate,
+      liveDate,
+      closeDate,
       supply
     );
   }
