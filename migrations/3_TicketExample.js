@@ -11,8 +11,7 @@ module.exports = function (
   primarySalePrice,
   secondaryMarkup,
   feeNumerator,
-  startDate,
-  endDate,
+  eventEndDate,
   liveDate,
   closeDate,
   supply
@@ -33,7 +32,6 @@ module.exports = function (
       primarySalePrice,
       secondaryMarkup,
       feeNumerator,
-      start,
       end,
       start,
       end,
@@ -50,8 +48,7 @@ module.exports = function (
       primarySalePrice,
       secondaryMarkup,
       feeNumerator,
-      startDate,
-      endDate,
+      eventEndDate,
       liveDate,
       closeDate,
       supply

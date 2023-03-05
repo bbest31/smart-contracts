@@ -89,10 +89,4 @@ interface IBlockPassTicket {
      */
     function listTicketContract() external;
 
-    // function mintNFTWithRoyalty(
-    //     address recipient,
-    //     string memory tokenURI,
-    //     address royaltyReceiver,
-    //     uint96 feeNumerator
-    // ) external returns (uint256);
 }

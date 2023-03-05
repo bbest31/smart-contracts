@@ -20,8 +20,8 @@ contract BlockPass is ReentrancyGuard {
     uint256 public TAKE_RATE = 10; // 10% primary take rate
     uint256 public EO_TAKE = 100 - TAKE_RATE;
     address payable private _marketOwner;
-    mapping(address => EventTicketContract) private _addressToTicketContract;
-    mapping(address => mapping(uint256 => Ticket)) private _secondaryMarket;
+    mapping(address => EventTicketContract) public _addressToTicketContract;
+    mapping(address => mapping(uint256 => Ticket)) public _secondaryMarket;
 
     struct Ticket {
         address ticketContract;
@@ -35,8 +35,7 @@ contract BlockPass is ReentrancyGuard {
         uint8 secondaryMarkup;
         address payable eventOrganizer;
         address payable owner;
-        uint256 startDate;
-        uint256 endDate;
+        uint256 eventEndDate;
         uint256 liveDate;
         uint256 closeDate;
         uint256 supply;
@@ -47,7 +46,6 @@ contract BlockPass is ReentrancyGuard {
         address ticketContract,
         address eventOrganizer,
         uint256 price,
-        uint256 start,
         uint256 end,
         uint256 live,
         uint256 close
@@ -82,14 +80,20 @@ contract BlockPass is ReentrancyGuard {
         return IERC721Receiver.onERC721Received.selector;
     }
 
+    // Withdraw function for market owner.
+    function marketWithdraw(uint _amount) public {
+        require(msg.sender == _marketOwner, "Action only allowed by market owner.");
+        require(_amount < address(this).balance,"Withdrawal amount exceeds contract balance.");
+        _marketOwner.transfer(_amount);
+    }
+
     // List the ticket contract on the marketplace
     function listTicketContract(
         address _ticketContract,
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
         address _eventOrganizer,
-        uint256 _startDate,
-        uint256 _endDate,
+        uint256 _eventEndDate,
         uint256 _liveDate,
         uint256 _closeDate,
         uint256 _supply
@@ -118,8 +122,7 @@ contract BlockPass is ReentrancyGuard {
             _secondaryMarkup,
             payable(_eventOrganizer),
             payable(address(this)),
-            _startDate,
-            _endDate,
+            _eventEndDate,
             _liveDate,
             _closeDate,
             _supply,
@@ -130,8 +133,7 @@ contract BlockPass is ReentrancyGuard {
             _ticketContract,
             _eventOrganizer,
             _primarySalePrice,
-            _startDate,
-            _endDate,
+            _eventEndDate,
             _liveDate,
             _closeDate
         );
@@ -300,11 +302,11 @@ contract BlockPass is ReentrancyGuard {
         uint256 _price
     ) private view returns (bool) {
         // disallow prices above the set secondary markup if event has not yet passed.
-        if (block.timestamp <= ticketContract.endDate) {
+        if (block.timestamp <= ticketContract.eventEndDate) {
             uint8 secondaryMarkup = ticketContract.secondaryMarkup;
             uint256 primarySalePrice = ticketContract.primarySalePrice;
             if (
-                _price <=
+                _price >
                 ticketContract.primarySalePrice.add(
                     primarySalePrice.div(100).mul(secondaryMarkup)
                 )

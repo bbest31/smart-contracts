@@ -44,10 +44,8 @@ abstract contract BlockPassTicket is
     // mapping of token ids to its state
     mapping(uint256 => tokenState) tokenStates;
 
-    // start date of event in UTC milliseconds
-    uint256 public startDate;
     // end date of the event in UTC milliseconds
-    uint256 public endDate;
+    uint256 public eventEndDate;
     // the date this ticket tier is available for purchase.
     uint256 public liveDate;
     // the date this ticket tier is closed for purchase.
@@ -64,8 +62,7 @@ abstract contract BlockPassTicket is
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
         uint96 _feeNumerator,
-        uint256 _startDate,
-        uint256 _endDate,
+        uint256 _eventEndDate,
         uint256 _liveDate,
         uint256 _closeDate,
         uint256 _supply
@@ -79,12 +76,8 @@ abstract contract BlockPassTicket is
             "Marketplace contract can't be the zero address"
         );
         require(
-            _endDate >= block.timestamp,
+            _eventEndDate >= block.timestamp,
             "Event end date can't be in the past"
-        );
-        require(
-            _startDate <= _endDate,
-            "Invalid start and end date relationship."
         );
         require(
             _closeDate >= block.timestamp,
@@ -103,8 +96,7 @@ abstract contract BlockPassTicket is
         _tokenURI = tokenURI;
         primarySalePrice = _primarySalePrice;
         secondaryMarkup = _secondaryMarkup;
-        startDate = _startDate;
-        endDate = _endDate;
+        eventEndDate = _eventEndDate;
         liveDate = _liveDate;
         closeDate = _closeDate;
         supply = _supply;
@@ -234,8 +226,7 @@ abstract contract BlockPassTicket is
             primarySalePrice,
             secondaryMarkup,
             eventOrganizer,
-            startDate,
-            endDate,
+            eventEndDate,
             liveDate,
             closeDate,
             supply
