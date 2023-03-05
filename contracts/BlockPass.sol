@@ -81,7 +81,7 @@ contract BlockPass is ReentrancyGuard {
     // Withdraw function for market owner.
     function marketWithdraw(uint _amount) public {
         require(msg.sender == _marketOwner, "Action only allowed by market owner.");
-        require(_amount < address(this).balance,"Withdrawl amount exceeds contract balance.");
+        require(_amount < address(this).balance,"Withdrawal amount exceeds contract balance.");
         _marketOwner.transfer(_amount);
     }
 
