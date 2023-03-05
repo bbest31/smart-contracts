@@ -42,7 +42,7 @@ contract BlockPass is ReentrancyGuard {
         bool active;
     }
 
-    event EventTicketListed(
+    event TicketTierListed(
         address ticketContract,
         address eventOrganizer,
         uint256 price,
@@ -60,7 +60,7 @@ contract BlockPass is ReentrancyGuard {
         bool isPrimary
     );
 
-    event TicketListed(
+    event TokenListed(
         address ticketContract,
         uint256 tokenId,
         address seller,
@@ -81,9 +81,15 @@ contract BlockPass is ReentrancyGuard {
     }
 
     // Withdraw function for market owner.
-    function marketWithdraw(uint _amount) public {
-        require(msg.sender == _marketOwner, "Action only allowed by market owner.");
-        require(_amount < address(this).balance,"Withdrawal amount exceeds contract balance.");
+    function marketWithdraw(uint256 _amount) public {
+        require(
+            msg.sender == _marketOwner,
+            "Action only allowed by market owner."
+        );
+        require(
+            _amount < address(this).balance,
+            "Withdrawal amount exceeds contract balance."
+        );
         _marketOwner.transfer(_amount);
     }
 
@@ -129,7 +135,7 @@ contract BlockPass is ReentrancyGuard {
             true
         );
 
-        emit EventTicketListed(
+        emit TicketTierListed(
             _ticketContract,
             _eventOrganizer,
             _primarySalePrice,
@@ -224,7 +230,7 @@ contract BlockPass is ReentrancyGuard {
             _price
         );
 
-        emit TicketListed(_ticketContract, _tokenId, msg.sender, _price);
+        emit TokenListed(_ticketContract, _tokenId, msg.sender, _price);
     }
 
     // update the sale price for a ticket in the secondary market.
@@ -259,6 +265,31 @@ contract BlockPass is ReentrancyGuard {
             payable(msg.sender),
             _newPrice
         );
+    }
+
+    // Cancel the resale of a ticket put on the secondary market.
+    function cancelResale(address _ticketContractAddr, uint256 _tokenId) public nonReentrant {
+        Ticket memory resaleTicket = _secondaryMarket[_ticketContractAddr][
+            _tokenId
+        ];
+        require(
+            resaleTicket.ticketContract != address(0),
+            "Ticket does not exist, or is not for sale."
+        );
+        require(
+            resaleTicket.owner == msg.sender,
+            "Sending address does not own the token."
+        );
+
+        // transfer token back to owner.
+        IERC721(_ticketContractAddr).safeTransferFrom(
+            address(this),
+            msg.sender,
+            _tokenId
+        );
+
+        delete _secondaryMarket[_ticketContractAddr][_tokenId];
+
     }
 
     function buySecondaryTicket(address _ticketContract, uint256 _tokenId)
