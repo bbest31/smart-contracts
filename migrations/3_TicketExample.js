@@ -10,8 +10,7 @@ module.exports = function (
   tokenURI,
   primarySalePrice,
   secondaryMarkup,
-  startDate,
-  endDate,
+  eventEndDate,
   liveDate,
   closeDate,
   supply
@@ -31,7 +30,6 @@ module.exports = function (
       "https://ibb.co/7yBDfqk",
       primarySalePrice,
       secondaryMarkup,
-      start,
       end,
       start,
       end,
@@ -47,8 +45,7 @@ module.exports = function (
       tokenURI,
       primarySalePrice,
       secondaryMarkup,
-      startDate,
-      endDate,
+      eventEndDate,
       liveDate,
       closeDate,
       supply

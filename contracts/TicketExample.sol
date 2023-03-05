@@ -14,8 +14,7 @@ contract TicketExample is BlockPassTicket, ERC165Storage {
         string memory tokenURI,
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
-        uint256 _startDate,
-        uint256 _endDate,
+        uint256 _eventEndDate,
         uint256 _liveDate,
         uint256 _closeDate,
         uint256 _supply
@@ -28,8 +27,7 @@ contract TicketExample is BlockPassTicket, ERC165Storage {
             tokenURI,
             _primarySalePrice,
             _secondaryMarkup,
-            _startDate,
-            _endDate,
+            _eventEndDate,
             _liveDate,
             _closeDate,
             _supply
