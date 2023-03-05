@@ -61,6 +61,7 @@ abstract contract BlockPassTicket is
         string memory tokenURI,
         uint256 _primarySalePrice,
         uint8 _secondaryMarkup,
+        uint96 _feeNumerator,
         uint256 _eventEndDate,
         uint256 _liveDate,
         uint256 _closeDate,
@@ -89,8 +90,7 @@ abstract contract BlockPassTicket is
         require(_supply > 0, "Supply must be greater than zero");
         require(bytes(tokenURI).length != 0, "Token URI must not be empty");
         _grantRole(CONTROLLER, msg.sender);
-        // set event organizer royalty to be 10%
-        _setDefaultRoyalty(_eventOrganizer, 1000);
+        _setDefaultRoyalty(_eventOrganizer, _feeNumerator);
         marketplaceContract = _marketplaceContract;
         eventOrganizer = _eventOrganizer;
         _tokenURI = tokenURI;
@@ -235,15 +235,4 @@ abstract contract BlockPassTicket is
         // grant controller role of the contract to the marketplace.
         _grantRole(CONTROLLER, marketplaceContract);
     }
-
-    // function mintNFTWithRoyalty(
-    //     address recipient,
-    //     string memory tokenURI,
-    //     address royaltyReceiver,
-    //     uint96 feeNumerator
-    // ) public whenNotPaused onlyOwner returns (uint256) {
-    //     uint256 tokenId = mintNFT(recipient, tokenURI);
-    //     _setTokenRoyalty(tokenId, royaltyReceiver, feeNumerator);
-    //     return tokenId;
-    // }
 }
