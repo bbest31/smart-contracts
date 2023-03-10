@@ -9,8 +9,9 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "./IBlockPassTicket.sol";
-import "./BlockPassTicket.sol";
+import "./ABlockPassTicket.sol";
 
 contract BlockPass is ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -171,7 +172,7 @@ contract BlockPass is ReentrancyGuard {
         payable(ticketContract.eventOrganizer).transfer(
             ticketContract.primarySalePrice.div(100).mul(EO_TAKE)
         );
-        uint256 tokenId = BlockPassTicket(_ticketContract).mintNFT(buyer);
+        uint256 tokenId = ABlockPassTicket(_ticketContract).mintNFT(buyer);
         _marketOwner.transfer(
             ticketContract.primarySalePrice.div(100).mul(TAKE_RATE)
         );

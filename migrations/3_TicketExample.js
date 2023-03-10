@@ -1,4 +1,4 @@
-const TicketExample = artifacts.require("TicketExample");
+const BlockPassTicket = artifacts.require("BlockPassTicket");
 
 module.exports = function (
   deployer,
@@ -28,7 +28,7 @@ module.exports = function (
       symbol,
       marketplaceContract,
       eventOrgAddress,
-      "https://ibb.co/7yBDfqk",
+      "https://i.ibb.co/dKXvTRm/Block-Pass-Logo.png",
       primarySalePrice,
       secondaryMarkup,
       feeNumerator,
@@ -39,7 +39,7 @@ module.exports = function (
     );
   } else {
     deployer.deploy(
-      TicketExample,
+      BlockPassTicket,
       name,
       symbol,
       marketplaceContract,
