@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 import "./ABlockPassTicket.sol";
 
 contract BlockPassTicket is ABlockPassTicket, ERC165Storage {
-
     struct TicketInformation {
         string tokenURI;
         uint256 _primarySalePrice;
@@ -24,10 +23,10 @@ contract BlockPassTicket is ABlockPassTicket, ERC165Storage {
     }
 
     constructor(
-       string memory _name,
-       string memory _symbol,
-       TicketInformation memory ticketInfo,
-       EventInformation memory eventInfo
+        string memory _name,
+        string memory _symbol,
+        TicketInformation memory ticketInfo,
+        EventInformation memory eventInfo
     )
         ABlockPassTicket(
             _name,
@@ -38,14 +37,16 @@ contract BlockPassTicket is ABlockPassTicket, ERC165Storage {
             ticketInfo._primarySalePrice,
             ticketInfo._secondaryMarkup,
             ticketInfo._feeNumerator,
-           eventInfo._eventEndDate,
+            eventInfo._eventEndDate,
             ticketInfo._liveDate,
-           ticketInfo._closeDate,
+            ticketInfo._closeDate,
             ticketInfo._supply
         )
     {}
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
