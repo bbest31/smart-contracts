@@ -102,7 +102,9 @@ abstract contract ABlockPassTicket is
         supply = _supply;
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
@@ -125,13 +127,9 @@ abstract contract ABlockPassTicket is
         _burn(tokenId);
     }
 
-    function mintNFT(address recipient)
-        public
-        override
-        whenNotPaused
-        onlyRole(CONTROLLER)
-        returns (uint256)
-    {
+    function mintNFT(
+        address recipient
+    ) public override whenNotPaused onlyRole(CONTROLLER) returns (uint256) {
         require(
             block.timestamp <= closeDate,
             "Unable to mint tokens after the ticket tier close date has passed."
@@ -152,28 +150,21 @@ abstract contract ABlockPassTicket is
         return newItemId;
     }
 
-    function setEventOrganizer(address newOrganizer)
-        public
-        override
-        onlyRole(CONTROLLER)
-    {
+    function setEventOrganizer(
+        address newOrganizer
+    ) public override onlyRole(CONTROLLER) {
         eventOrganizer = newOrganizer;
     }
 
-    function setMarketplaceContract(address newMarketplace)
-        public
-        override
-        onlyRole(CONTROLLER)
-    {
+    function setMarketplaceContract(
+        address newMarketplace
+    ) public override onlyRole(CONTROLLER) {
         marketplaceContract = newMarketplace;
     }
 
-    function increaseTicketSupply(uint256 additionalSupply)
-        public
-        override
-        onlyRole(CONTROLLER)
-        returns (uint256)
-    {
+    function increaseTicketSupply(
+        uint256 additionalSupply
+    ) public override onlyRole(CONTROLLER) returns (uint256) {
         supply += additionalSupply;
         return supply;
     }
@@ -182,11 +173,9 @@ abstract contract ABlockPassTicket is
         return supply - _tokenIds.current();
     }
 
-    function setPrimarySalePrice(uint256 newPrice)
-        public
-        override
-        onlyRole(CONTROLLER)
-    {
+    function setPrimarySalePrice(
+        uint256 newPrice
+    ) public override onlyRole(CONTROLLER) {
         primarySalePrice = newPrice;
     }
 
@@ -194,11 +183,9 @@ abstract contract ABlockPassTicket is
         secondaryMarkup = newMarkup;
     }
 
-    function tokenScanned(uint256 tokenId)
-        public
-        override
-        onlyRole(CONTROLLER)
-    {
+    function tokenScanned(
+        uint256 tokenId
+    ) public override onlyRole(CONTROLLER) {
         require(
             tokenStates[tokenId] != tokenState.SCANNED,
             "Token has already been scanned"
@@ -211,11 +198,9 @@ abstract contract ABlockPassTicket is
         tokenStates[tokenId] = tokenState.SCANNED;
     }
 
-    function tokenInvalidated(uint256 tokenId)
-        public
-        override
-        onlyRole(CONTROLLER)
-    {
+    function tokenInvalidated(
+        uint256 tokenId
+    ) public override onlyRole(CONTROLLER) {
         require(_tokenIds.current() >= tokenId, "Token not yet minted.");
         tokenStates[tokenId] = tokenState.INVALIDATED;
     }
@@ -234,5 +219,9 @@ abstract contract ABlockPassTicket is
 
         // grant controller role of the contract to the marketplace.
         _grantRole(CONTROLLER, marketplaceContract);
+    }
+
+    function closeTicketSale() public override onlyRole(CONTROLLER) {
+        closeDate = block.timestamp;
     }
 }

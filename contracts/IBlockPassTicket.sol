@@ -89,4 +89,9 @@ interface IBlockPassTicket {
      */
     function listTicketContract() external;
 
+    /**
+     * @dev Closes the sale of the ticket tier by setting the closeDate to the current timestamp.
+     */
+    function closeTicketSale() external;
+
 }
