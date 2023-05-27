@@ -45,9 +45,9 @@ interface IBlockPassTicket {
     /**
      * @dev Increases the max supply of mintable tokens by `additionalSupply`.
      */
-    function increaseTicketSupply(uint256 additionalSupply)
-        external
-        returns (uint256);
+    function increaseTicketSupply(
+        uint256 additionalSupply
+    ) external returns (uint256);
 
     /**
      * @dev Returns the total tickets still available for sale.
@@ -89,4 +89,18 @@ interface IBlockPassTicket {
      */
     function listTicketContract() external;
 
+    /**
+     * @dev Pauses the sale of the ticket tier.
+     */
+    function pauseTicketSale() external;
+
+    /**
+     * @dev Unpauses the sale of the ticket tier.
+     */
+    function resumeTicketSale() external;
+
+    /**
+     * @dev Closes the sale of the ticket tier by setting the closeDate to the current timestamp.
+     */
+    function closeTicketSale() external;
 }
