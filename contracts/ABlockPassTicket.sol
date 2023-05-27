@@ -221,6 +221,14 @@ abstract contract ABlockPassTicket is
         _grantRole(CONTROLLER, marketplaceContract);
     }
 
+    function pauseTicketSale() public override onlyRole(CONTROLLER) {
+        _pause();
+    }
+
+    function resumeTicketSale() public override onlyRole(CONTROLLER) {
+        _unpause();
+    }
+
     function closeTicketSale() public override onlyRole(CONTROLLER) {
         closeDate = block.timestamp;
     }
