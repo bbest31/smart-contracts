@@ -29,12 +29,15 @@ You will need 4 wallets to test fully.
 Steps to execute:
 
 1. Deploy BlockPass.sol using the BlockPass company wallet.
-2. Deploy TicketExample.sol using the event organizer wallet.
+2. Deploy BlockPassTicket.sol using the event organizer wallet.
 3. List the ticket contract on the marketplace using the event organizer wallet, via the `listTicketContract` function on the ticket contract.
 4. Buy a ticket using the attendee wallet A via the marketplace contract.
 5. List a ticket for resale using the attendee wallet A via the marketplace contract.
 6. Buy the secondary sale ticket using the attendee wallet B via the marketplace contract.
 
+## Current Dev Contracts
+* BlockPass.sol on Mumbai Testnet - `0x31A2255983956eC97e989E33d650170ECB8E09e1`
+* BlockPassTicket.sol - `0xC82F3749D2E278445b22F5a5A04fE1C5d595A395`
 
 ## References
 * [How to build an NFT markeplace dApp on Ethereum or Optimism](https://trufflesuite.com/guides/nft-marketplace/#overview)

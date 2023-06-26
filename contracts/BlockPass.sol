@@ -53,7 +53,7 @@ contract BlockPass is ReentrancyGuard {
     );
 
     event TicketSold(
-        address ticketContract,
+        address indexed ticketContract,
         uint256 tokenId,
         address eventOrganizer,
         address buyer,
