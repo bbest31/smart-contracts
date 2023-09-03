@@ -9,7 +9,7 @@ contract BlockPassTicket is ABlockPassTicket, ERC165Storage {
     struct TicketInformation {
         string tokenURI;
         uint256 _primarySalePrice;
-        uint8 _secondaryMarkup;
+        uint96 _secondaryMarkup;
         uint96 _feeNumerator;
         uint256 _liveDate;
         uint256 _closeDate;
