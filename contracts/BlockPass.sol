@@ -1,6 +1,6 @@
 // contracts/BasicTicket.sol
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
+pragma solidity >=0.7.3;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -18,11 +18,11 @@ contract BlockPass is ReentrancyGuard {
     using SafeMath for uint256;
     Counters.Counter private _primarySales;
     Counters.Counter private _secondarySales;
-    uint256 public TAKE_RATE = 10; // 10% primary take rate
-    uint256 public EO_TAKE = 100 - TAKE_RATE;
+    uint256 public TAKE_RATE = 1000; // 10% primary take rate
     address payable private _marketOwner;
     mapping(address => EventTicketContract) public _addressToTicketContract;
     mapping(address => mapping(uint256 => Ticket)) public _secondaryMarket;
+    mapping(address => TokenRef[]) public _userMappedSecondaryMarket;
 
     struct Ticket {
         address ticketContract;
@@ -30,10 +30,15 @@ contract BlockPass is ReentrancyGuard {
         uint256 price;
     }
 
+    struct TokenRef {
+        address ticketContract;
+        uint256 token;
+    }
+
     struct EventTicketContract {
         address ticketContract;
         uint256 primarySalePrice;
-        uint8 secondaryMarkup;
+        uint96 secondaryMarkup;
         address payable eventOrganizer;
         address payable owner;
         uint256 eventEndDate;
@@ -98,7 +103,7 @@ contract BlockPass is ReentrancyGuard {
     function listTicketContract(
         address _ticketContract,
         uint256 _primarySalePrice,
-        uint8 _secondaryMarkup,
+        uint96 _secondaryMarkup,
         address _eventOrganizer,
         uint256 _eventEndDate,
         uint256 _liveDate,
@@ -170,11 +175,11 @@ contract BlockPass is ReentrancyGuard {
 
         address payable buyer = payable(msg.sender);
         payable(ticketContract.eventOrganizer).transfer(
-            ticketContract.primarySalePrice.div(100).mul(EO_TAKE)
+            ticketContract.primarySalePrice.div(10000).mul(10000 - TAKE_RATE)
         );
         uint256 tokenId = ABlockPassTicket(_ticketContract).mintNFT(buyer);
         _marketOwner.transfer(
-            ticketContract.primarySalePrice.div(100).mul(TAKE_RATE)
+            ticketContract.primarySalePrice.div(10000).mul(TAKE_RATE)
         );
 
         _primarySales.increment();
@@ -231,6 +236,12 @@ contract BlockPass is ReentrancyGuard {
             _price
         );
 
+        TokenRef[] storage tickets = _userMappedSecondaryMarket[msg.sender];
+        tickets.push(TokenRef(
+            _ticketContract,
+            _tokenId
+        ));
+
         emit TokenListed(_ticketContract, _tokenId, msg.sender, _price);
     }
 
@@ -269,7 +280,10 @@ contract BlockPass is ReentrancyGuard {
     }
 
     // Cancel the resale of a ticket put on the secondary market.
-    function cancelResale(address _ticketContractAddr, uint256 _tokenId) public nonReentrant {
+    function cancelResale(
+        address _ticketContractAddr,
+        uint256 _tokenId
+    ) public nonReentrant {
         Ticket memory resaleTicket = _secondaryMarket[_ticketContractAddr][
             _tokenId
         ];
@@ -289,15 +303,14 @@ contract BlockPass is ReentrancyGuard {
             _tokenId
         );
 
-        delete _secondaryMarket[_ticketContractAddr][_tokenId];
-
+        removeSecondaryMarketTicket(_ticketContractAddr, _tokenId);
+       
     }
 
-    function buySecondaryTicket(address _ticketContract, uint256 _tokenId)
-        public
-        payable
-        nonReentrant
-    {
+    function buySecondaryTicket(
+        address _ticketContract,
+        uint256 _tokenId
+    ) public payable nonReentrant {
         Ticket storage ticket = _secondaryMarket[_ticketContract][_tokenId];
         require(ticket.owner != address(0), "Ticket does not exist.");
         require(msg.value >= ticket.price, "Funds do not cover ticket cost");
@@ -326,7 +339,7 @@ contract BlockPass is ReentrancyGuard {
             false
         );
         // remove ticket from secondary market
-        delete _secondaryMarket[_ticketContract][_tokenId];
+       removeSecondaryMarketTicket(_ticketContract,_tokenId);
     }
 
     function isPriceProtectionValid(
@@ -335,12 +348,12 @@ contract BlockPass is ReentrancyGuard {
     ) private view returns (bool) {
         // disallow prices above the set secondary markup if event has not yet passed.
         if (block.timestamp <= ticketContract.eventEndDate) {
-            uint8 secondaryMarkup = ticketContract.secondaryMarkup;
+            uint96 secondaryMarkup = ticketContract.secondaryMarkup;
             uint256 primarySalePrice = ticketContract.primarySalePrice;
             if (
                 _price >
                 ticketContract.primarySalePrice.add(
-                    primarySalePrice.div(100).mul(secondaryMarkup)
+                    primarySalePrice.div(10000).mul(secondaryMarkup)
                 )
             ) {
                 return false;
@@ -350,70 +363,28 @@ contract BlockPass is ReentrancyGuard {
         return true;
     }
 
+    function removeSecondaryMarketTicket(address _ticketContract, uint _tokenId) private {
+        // remove ticket from secondary market
+        delete _secondaryMarket[_ticketContract][_tokenId];
+
+        TokenRef[] storage tickets = _userMappedSecondaryMarket[msg.sender];
+        uint length = tickets.length;
+        for(uint i = 0; i < length; i++) {
+            TokenRef memory ticket = tickets[i];
+            if(ticket.ticketContract == _ticketContract && _tokenId == ticket.token) {
+                // remove ticket ref
+                tickets[i] = tickets[length-1];
+                tickets.pop();
+            }
+        }
+
+    }
+
     //==============================Attendee/Query Functions=====================================
 
-    //TODO getListedTicketContracts
+    function getResaleTickets(address seller) public view returns (TokenRef[] memory) {
+        TokenRef[] memory tickets = _userMappedSecondaryMarket[seller];
+        return tickets;
+    }
 
-    //TODO getListedSecondaryMarketTickets
-
-    // function getListedNfts() public view returns (NFT[] memory) {
-    //     uint256 nftCount = _nftCount.current();
-    //     uint256 unsoldNftsCount = nftCount - _primarySales.current();
-
-    //     NFT[] memory nfts = new NFT[](unsoldNftsCount);
-    //     uint256 nftsIndex = 0;
-    //     for (uint256 i = 0; i < nftCount; i++) {
-    //         if (_idToNFT[i + 1].listed) {
-    //             nfts[nftsIndex] = _idToNFT[i + 1];
-    //             nftsIndex++;
-    //         }
-    //     }
-    //     return nfts;
-    // }
-
-    //TODO change to get my tickets
-    // function getMyNfts() public view returns (NFT[] memory) {
-    //     uint256 nftCount = _nftCount.current();
-    //     uint256 myNftCount = 0;
-    //     for (uint256 i = 0; i < nftCount; i++) {
-    //         if (_idToNFT[i + 1].owner == msg.sender) {
-    //             myNftCount++;
-    //         }
-    //     }
-
-    //     NFT[] memory nfts = new NFT[](myNftCount);
-    //     uint256 nftsIndex = 0;
-    //     for (uint256 i = 0; i < nftCount; i++) {
-    //         if (_idToNFT[i + 1].owner == msg.sender) {
-    //             nfts[nftsIndex] = _idToNFT[i + 1];
-    //             nftsIndex++;
-    //         }
-    //     }
-    //     return nfts;
-    // }
-
-    // TODO: getMyListedSecondaryMarketTickets
-    // function getMyListedNfts() public view returns (NFT[] memory) {
-    //     uint256 nftCount = _nftCount.current();
-    //     uint256 myListedNftCount = 0;
-    //     for (uint256 i = 0; i < nftCount; i++) {
-    //         if (
-    //             _idToNFT[i + 1].seller == msg.sender && _idToNFT[i + 1].listed
-    //         ) {
-    //             myListedNftCount++;
-    //         }
-    //     }
-
-    //     NFT[] memory nfts = new NFT[](myListedNftCount);
-    //     uint256 nftsIndex = 0;
-    //     for (uint256 i = 0; i < nftCount; i++) {
-    //         if (
-    //             _idToNFT[i + 1].seller == msg.sender && _idToNFT[i + 1].listed
-    //         ) {
-    //             nfts[nftsIndex] = _idToNFT[i + 1];
-    //             nftsIndex++;
-    //         }
-    //     }
-    //     return nfts;
-    // }
 }
