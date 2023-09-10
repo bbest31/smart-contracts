@@ -1,6 +1,6 @@
 // contracts/BlockPassTicket.sol
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.9.0;
+pragma solidity >=0.7.3;
 
 import "@openzeppelin/contracts/utils/introspection/ERC165Storage.sol";
 import "./ABlockPassTicket.sol";

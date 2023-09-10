@@ -1,6 +1,6 @@
 // contracts/IBlockPassTicket.sol
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.9.0;
+pragma solidity >=0.7.3;
 
 interface IBlockPassTicket {
     /**
@@ -90,17 +90,7 @@ interface IBlockPassTicket {
     function listTicketContract() external;
 
     /**
-     * @dev Pauses the sale of the ticket tier.
+     * @dev Sets the closeDate of the ticket tier.
      */
-    function pauseTicketSale() external;
-
-    /**
-     * @dev Unpauses the sale of the ticket tier.
-     */
-    function resumeTicketSale() external;
-
-    /**
-     * @dev Closes the sale of the ticket tier by setting the closeDate to the current timestamp.
-     */
-    function closeTicketSale() external;
+    function setCloseDate(uint256 newCloseDate) external;
 }

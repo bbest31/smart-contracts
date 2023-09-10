@@ -1,6 +1,6 @@
 // contracts/ABlockPassTicket.sol
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0 <0.9.0;
+pragma solidity >=0.7.3;
 
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 //This implementation of ERC721 is used so that we store the tokenURIs on chain in storage, which is what allows us to store the metadata we upload to IPFS off-chain.
@@ -106,7 +106,7 @@ abstract contract ABlockPassTicket is
         public
         view
         virtual
-        override(ERC721, ERC2981, AccessControl)
+        override(ERC2981, AccessControl, ERC721URIStorage)
         returns (bool)
     {
         return
@@ -192,6 +192,10 @@ abstract contract ABlockPassTicket is
 
     function setSecondaryMarkup(uint8 newMarkup) public override {
         secondaryMarkup = newMarkup;
+    }
+
+    function setCloseDate(uint256 newCloseDate) public override {
+        closeDate = newCloseDate;
     }
 
     function tokenScanned(uint256 tokenId)
